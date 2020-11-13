@@ -135,14 +135,15 @@ class CombinatorSystem::Implementation {
     std::pair<ExpressionID, ExpressionID> newContents;
     if (headSuccessor != nullExpression) {
       newContents = {headSuccessor, argument(root)};
+      expressions_[head(root)].successor = nullExpression;
     } else if (argumentSuccessor != nullExpression) {
       newContents = {head(root), argumentSuccessor};
+      expressions_[argument(root)].successor = nullExpression;
     } else {
       throw Error::InconsistentDownstreamUpdate;
     }
 
     expressions_[root].successor = newExpression(newContents.first, newContents.second);
-    expressions_[head(root)].successor = nullExpression;
   }
 
   bool isDownstreamEvolutionComplete(const ExpressionID root) {
