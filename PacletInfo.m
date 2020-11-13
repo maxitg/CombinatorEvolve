@@ -7,7 +7,7 @@ Paclet[
   URL -> "https://github.com/maxitg/CombinatorEvolve",
   SystemID -> {"MacOSX-x86-64", "Linux-x86-64", "Windows-x86-64"},
   Extensions -> {
-    {"Kernel", Context -> "CombinatorReplace`"},
+    {"Kernel", Context -> "CombinatorEvolve`"},
     {"LibraryLink"}
   }
 ]

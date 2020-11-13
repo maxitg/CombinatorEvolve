@@ -1,7 +1,6 @@
 #!/usr/bin/env wolframscript
 
 Needs["CCompilerDriver`"];
-Needs["PacletManager`"];
 Needs["GeneralUtilities`"];
 
 $success = True;
