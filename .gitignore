@@ -1,0 +1,15 @@
+# Xcode
+
+xcuserdata/
+
+# macOS
+
+.DS_Store
+
+# Built paclets
+
+*.paclet
+
+# Library binary
+
+LibraryResources/
