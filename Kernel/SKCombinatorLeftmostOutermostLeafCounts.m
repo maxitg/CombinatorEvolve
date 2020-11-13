@@ -53,5 +53,5 @@ encodeExpressionsAndRoot[expr_] := ModuleScope[
 ]
 
 SKCombinatorLeftmostOutermostLeafCounts[initExpr_, eventsCount_] /; $cpp$setReplace =!= $Failed := ModuleScope[
-  cpp$skCombinatorLeftmostOutermostLeafCounts[##, 3] & @@ encodeExpressionsAndRoot[initExpr]
+  cpp$skCombinatorLeftmostOutermostLeafCounts[##, eventsCount] & @@ encodeExpressionsAndRoot[initExpr]
 ]
