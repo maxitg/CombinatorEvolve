@@ -33,18 +33,38 @@ std::vector<CombinatorExpression> getCombinatorExpressions(WolframLibraryData li
   return expressions;
 }
 
-MTensor putVector(const std::vector<int64_t>& data, WolframLibraryData libData) {
-  size_t tensorLength = data.size();
+MTensor putMPZVector(const std::vector<mpz_class>& data, WolframLibraryData libData) {
+  std::vector<uint64_t> lengths;
+  std::vector<uint64_t> allDigits;
+  for (const auto& number : data) {
+    std::vector<uint64_t> digits;
+    mpz_class remainingNumber = number;
+    mpz_class digitSize;
+    mpz_pow_ui(digitSize.get_mpz_t(), mpz_class(2).get_mpz_t(), 64);
+    while(remainingNumber > 0) {
+      mpz_class thisDigit = remainingNumber & (digitSize - 1);
+      digits.push_back(thisDigit.get_ui());
+      remainingNumber >>= 64;
+    }
+    lengths.push_back(digits.size());
+    allDigits.insert(allDigits.end(), digits.rbegin(), digits.rend());
+  }
 
-  const mint dimensions[1] = {static_cast<mint>(tensorLength)};
+  const mint dimensions[1] = {static_cast<mint>(1 + lengths.size() + allDigits.size())};
   MTensor output;
   libData->MTensor_new(MType_Integer, 1, dimensions, &output);
 
   mint writeIndex = 0;
   mint position[1];
-  for (const auto& number : data) {
+  position[0] = ++writeIndex;
+  libData->MTensor_setInteger(output, position, lengths.size());
+  for (const auto& length : lengths) {
     position[0] = ++writeIndex;
-    libData->MTensor_setInteger(output, position, number);
+    libData->MTensor_setInteger(output, position, length);
+  }
+  for (const auto& digit : allDigits) {
+    position[0] = ++writeIndex;
+    libData->MTensor_setInteger(output, position, static_cast<umint>(digit));
   }
 
   return output;
@@ -66,9 +86,9 @@ int skCombinatorLeftmostOutermostLeafCounts(WolframLibraryData libData, mint arg
 
     CombinatorSystem system(initialExpressions, initialRoot);
     system.evolve(eventsCount, shouldAbort(libData));
-    std::vector<int64_t> leafCounts = system.leafCounts();
+    std::vector<mpz_class> leafCounts = system.leafCounts();
 
-    MArgument_setMTensor(result, putVector(leafCounts, libData));
+    MArgument_setMTensor(result, putMPZVector(leafCounts, libData));
   } catch (...) {
     return LIBRARY_FUNCTION_ERROR;
   }

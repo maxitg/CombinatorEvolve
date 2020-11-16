@@ -18,7 +18,7 @@ Check[
         "Windows",
           {"/std:c++17", "/EHsc"},
         _,
-          {"-std=c++17"}],
+          {"-std=c++17 -lgmp"}],
       "Language" -> "C++",
       "TargetDirectory" -> FileNameJoin[{$repoRoot, "LibraryResources", $SystemID}],
       "TargetSystemID" -> $SystemID];

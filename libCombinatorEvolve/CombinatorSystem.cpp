@@ -41,8 +41,8 @@ class CombinatorSystem::Implementation {
     return eventsDone;
   }
 
-  std::vector<int64_t> leafCounts() {
-    std::vector<int64_t> result;
+  std::vector<mpz_class> leafCounts() {
+    std::vector<mpz_class> result;
     for (auto root : evolutionRoots_) {
       result.push_back(leafCount(root));
     }
@@ -151,7 +151,7 @@ class CombinatorSystem::Implementation {
             (argument(root) < 0 || expressions_[argument(root)].isDownstreamEvolutionComplete));
   }
 
-  int64_t leafCount(const ExpressionID root) {
+  mpz_class leafCount(const ExpressionID root) {
     if (root < 0) return 1;
     if (root >= expressions_.size()) throw Error::InvalidReference;
     if (expressions_[root].leafCount == -1) {
@@ -169,5 +169,5 @@ int64_t CombinatorSystem::evolve(const int64_t eventsCount, const std::function<
   return implementation_->evolve(eventsCount, shouldAbort);
 }
 
-std::vector<int64_t> CombinatorSystem::leafCounts() { return implementation_->leafCounts(); }
+std::vector<mpz_class> CombinatorSystem::leafCounts() { return implementation_->leafCounts(); }
 }  // namespace CombinatorEvolve

@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include <gmpxx.h>
+
 #include "Expression.hpp"
 
 namespace CombinatorEvolve {
@@ -16,7 +18,7 @@ class CombinatorSystem {
 
   int64_t evolve(int64_t eventsCount, const std::function<bool()>& shouldAbort);
 
-  std::vector<int64_t> leafCounts();
+  std::vector<mpz_class> leafCounts();
 
  private:
   class Implementation;
