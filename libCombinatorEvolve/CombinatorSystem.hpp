@@ -1,6 +1,7 @@
 #ifndef LIBCOMBINATOREVOLVE_COMBINATORSYSTEM_HPP_
 #define LIBCOMBINATOREVOLVE_COMBINATORSYSTEM_HPP_
 
+#include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
