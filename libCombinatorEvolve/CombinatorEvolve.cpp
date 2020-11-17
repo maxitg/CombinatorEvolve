@@ -20,17 +20,31 @@ std::vector<CombinatorExpression> getCombinatorExpressions(WolframLibraryData li
   mint tensorLength = libData->MTensor_getFlattenedLength(expressionsTensor);
   mint* tensorData = libData->MTensor_getIntegerData(expressionsTensor);
 
-  const auto getDataFunc = [&tensorData, &tensorLength, &readIndex]() -> mint {
-    return getData(tensorData, tensorLength, readIndex++);
-  };
-
   const mint expressionsCount = tensorLength / 2;
   std::vector<CombinatorExpression> expressions(expressionsCount);
   for (mint expressionIndex = 0; expressionIndex < expressionsCount; ++expressionIndex) {
-    expressions[expressionIndex].headID = getDataFunc();
-    expressions[expressionIndex].argumentID = getDataFunc();
+    expressions[expressionIndex].headID = getData(tensorData, tensorLength, readIndex++);
+    expressions[expressionIndex].argumentID = getData(tensorData, tensorLength, readIndex++);
   }
   return expressions;
+}
+
+CombinatorRules getCombinatorRules(WolframLibraryData libData, MTensor expressionsTensor, MTensor rootsTensor) {
+  CombinatorRules result;
+  result.expressions = getCombinatorExpressions(libData, expressionsTensor);
+
+  mint readIndex = 0;
+  mint tensorLength = libData->MTensor_getFlattenedLength(rootsTensor);
+  mint* tensorData = libData->MTensor_getIntegerData(rootsTensor);
+
+  const mint rulesCount = tensorLength / 2;
+  result.roots.resize(rulesCount);
+  for (mint ruleIndex = 0; ruleIndex < rulesCount; ++ruleIndex) {
+    result.roots[ruleIndex].first = getData(tensorData, tensorLength, readIndex++);
+    result.roots[ruleIndex].second = getData(tensorData, tensorLength, readIndex++);
+  }
+
+  return result;
 }
 
 constexpr mint Int64VectorTypeID = -45735;
@@ -96,18 +110,19 @@ std::function<bool()> shouldAbort(WolframLibraryData libData) {
   return [libData]() { return static_cast<bool>(libData->AbortQ()); };
 }
 
-int skCombinatorLeftmostOutermostLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
-  if (argc != 3) {  // init expressions + root + events count
+int combinatorLeftmostOutermostLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  if (argc != 5) {  // rule expressions + rule roots + init expressions + root + events count
     return LIBRARY_FUNCTION_ERROR;
   }
   try {
+    CombinatorRules rules = getCombinatorRules(libData, MArgument_getMTensor(argv[0]), MArgument_getMTensor(argv[1]));
     std::vector<CombinatorExpression> initialExpressions =
-        getCombinatorExpressions(libData, MArgument_getMTensor(argv[0]));
-    ExpressionID initialRoot = MArgument_getInteger(argv[1]);
-    int64_t eventsCount = MArgument_getInteger(argv[2]);
+        getCombinatorExpressions(libData, MArgument_getMTensor(argv[2]));
+    ExpressionID initialRoot = MArgument_getInteger(argv[3]);
+    int64_t eventsCount = MArgument_getInteger(argv[4]);
 
     CombinatorSystem system(initialExpressions, initialRoot);
-    system.evolve(eventsCount, shouldAbort(libData));
+    system.evolve(rules, eventsCount, shouldAbort(libData));
     try {
       std::vector<uint64_t> leafCounts = system.leafCounts();
       MArgument_setMTensor(result, putVector(leafCounts, libData));
@@ -134,5 +149,5 @@ EXTERN_C int skCombinatorLeftmostOutermostLeafCounts(WolframLibraryData libData,
                                                      mint argc,
                                                      MArgument* argv,
                                                      MArgument result) {
-  return CombinatorEvolve::skCombinatorLeftmostOutermostLeafCounts(libData, argc, argv, result);
+  return CombinatorEvolve::combinatorLeftmostOutermostLeafCounts(libData, argc, argv, result);
 }

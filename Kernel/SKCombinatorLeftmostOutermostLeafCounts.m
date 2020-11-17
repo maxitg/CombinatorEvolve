@@ -32,24 +32,40 @@ cpp$skCombinatorLeftmostOutermostLeafCounts = If[$libraryFile =!= $Failed,
   LibraryFunctionLoad[
     $libraryFile,
     "skCombinatorLeftmostOutermostLeafCounts",
-    {{Integer, 2},  (* expressions *)
-     Integer,  (* root *)
-     Integer},  (* events count *)
+    {{Integer, 2},  (* rule expressions *)
+     {Integer, 2},  (* rule roots *)
+     {Integer, 2},  (* init expressions *)
+     Integer,       (* root *)
+     Integer},      (* events count *)
     {Integer, 1}],  (* leaf counts *)
   $Failed];
 
 $libraryFunctions = {cpp$skCombinatorLeftmostOutermostLeafCounts};
 
-$combinatorIDs = <|Global`s -> -2, Global`k -> -3|>;
-
-encodeExpressionsAndRoot[expr_] := ModuleScope[
-  expressions = DeleteCases[Union[Level[expr, All, Heads -> True]], Alternatives @@ Keys[$combinatorIDs]];
-  expressionsToIDs = Join[Thread[expressions -> Range[Length[expressions]] - 1], Normal @ $combinatorIDs];
+encodeExpressionsAndRoots[exprs_, specialSymbolIDs_, patternVariables_ : {}] := ModuleScope[
+  expressions = DeleteCases[
+    Union[Level[exprs, {1, Infinity}, Heads -> True]],
+    Alternatives @@ Join[Keys[specialSymbolIDs], patternVariables, {List}]];
+  expressionsToIDs = Join[
+    Thread[expressions -> Range[Length[expressions]] - 1],
+    Thread[patternVariables -> Range[Length[expressions], Length[expressions] + Length[patternVariables] - 1]],
+    Normal @ specialSymbolIDs
+  ];
   expressionInheritance = Association[# -> {#[[0]], #[[1]]} & /@ expressions];
   {
     Values[KeySort[Fold[#2[Replace[expressionsToIDs], #] &, expressionInheritance, {KeyMap, Map[##, {2}] &}]]],
-    Replace[expressionsToIDs][expr]
+    Replace[exprs, expressionsToIDs, {1}]
   }
+]
+
+encodeExpressionsAndRoot[expr_, specialSymbolIDs_, patternVariables_ : {}] :=
+  {#, First[#2]} & @@ encodeExpressionsAndRoots[{expr}, specialSymbolIDs, patternVariables]
+
+encodeRules[rules_, patternIDs_, constantIDs_] := ModuleScope[
+  inputs = First /@ rules /. Pattern -> (#1 &);
+  outputs = Last /@ rules;
+  {expressions, roots} = encodeExpressionsAndRoots[Riffle[inputs, outputs], constantIDs, patternIDs];
+  {expressions, Partition[roots, 2]}
 ]
 
 $Int64VectorTypeID = -45735;
@@ -65,5 +81,14 @@ decodeLeafCounts[{$MPZVectorTypeID, spec___}] := ModuleScope[
 ]
 
 SKCombinatorLeftmostOutermostLeafCounts[initExpr_, eventsCount_] /; $cpp$setReplace =!= $Failed := ModuleScope[
-  decodeLeafCounts[cpp$skCombinatorLeftmostOutermostLeafCounts[##, eventsCount] & @@ encodeExpressionsAndRoot[initExpr]]
+  rules = {Global`s[a_][b_][c_] :> a[c][b[c]], Global`k[a_][b_] :> a};
+  patternAtoms = First /@ Union[Cases[First /@ rules, _Pattern, All, Heads -> True]];
+  constantAtoms = Complement[
+    Union @ Cases[{rules, initExpr}, _ ? AtomQ, All, Heads -> True], 
+    Join[patternAtoms, {Blank, Pattern, List, RuleDelayed}]];
+
+  constantIDs = Association[Thread[constantAtoms -> Range[-2, -Length[constantAtoms] - 1, -1]]];
+
+  decodeLeafCounts[cpp$skCombinatorLeftmostOutermostLeafCounts[##, eventsCount] & @@
+    Join[encodeRules[rules, patternAtoms, constantIDs], encodeExpressionsAndRoot[initExpr, constantIDs]]]
 ]

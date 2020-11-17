@@ -18,6 +18,7 @@
 		696FBA5D255EC418005ADB30 /* Expression.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Expression.hpp; sourceTree = "<group>"; };
 		696FBA5F255ED4DD005ADB30 /* CombinatorSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CombinatorSystem.cpp; sourceTree = "<group>"; };
 		696FBA60255ED4DD005ADB30 /* CombinatorSystem.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = CombinatorSystem.hpp; sourceTree = "<group>"; };
+		696FBA7025634BED005ADB30 /* Rule.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Rule.hpp; sourceTree = "<group>"; };
 		699A5460255EBCBA001BE4EA /* libCombinatorEvolve.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libCombinatorEvolve.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		699A5463255EBCBA001BE4EA /* CombinatorEvolve.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = CombinatorEvolve.hpp; sourceTree = "<group>"; };
 		699A5467255EBCBA001BE4EA /* CombinatorEvolve.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CombinatorEvolve.cpp; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				696FBA5C255EC388005ADB30 /* IDTypes.hpp */,
+				696FBA7025634BED005ADB30 /* Rule.hpp */,
 				696FBA5D255EC418005ADB30 /* Expression.hpp */,
 				696FBA5F255ED4DD005ADB30 /* CombinatorSystem.cpp */,
 				696FBA60255ED4DD005ADB30 /* CombinatorSystem.hpp */,

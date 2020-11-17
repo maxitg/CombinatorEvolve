@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "Expression.hpp"
+#include "Rule.hpp"
 
 namespace CombinatorEvolve {
 class CombinatorSystem {
@@ -18,7 +19,7 @@ class CombinatorSystem {
 
   CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions, ExpressionID initialRoot);
 
-  int64_t evolve(int64_t eventsCount, const std::function<bool()>& shouldAbort);
+  int64_t evolve(const CombinatorRules& rules, int64_t eventsCount, const std::function<bool()>& shouldAbort);
 
   std::vector<uint64_t> leafCounts();
   std::vector<mpz_class> leafCountsMPZ();

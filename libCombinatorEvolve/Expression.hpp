@@ -5,15 +5,10 @@
 
 namespace CombinatorEvolve {
 constexpr ExpressionID nullExpression = -1;
-constexpr ExpressionID combinatorS = -2;
-constexpr ExpressionID combinatorK = -3;
 
 struct CombinatorExpression {
   ExpressionID headID;
   ExpressionID argumentID;
-
-  ExpressionID successor = nullExpression;     // result of the evolution event
-  bool isDownstreamEvolutionComplete = false;  // nothing left to evolve downstream
 };
 }  // namespace CombinatorEvolve
 
