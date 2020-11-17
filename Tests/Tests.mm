@@ -13,12 +13,21 @@
 
 const auto shouldAbort = [](){ return false; };
 
+const CombinatorEvolve::CombinatorRules skRules =
+    {{{8, 10}, {9, 10}, {-3, 8}, {-2, 8}, {0, 1}, {2, 9}, {3, 9}, {6, 10}}, {{7, 4}, {5, 8}}};
+
+- (void)testASimpleRule {
+  CombinatorEvolve::CombinatorSystem system({{-3, -3}, {0, -3}}, 1);
+  XCTAssertEqual(system.evolve(skRules, 1, shouldAbort), 1);
+  XCTAssertEqual(system.leafCounts(), std::vector<uint64_t>({3, 1}));
+}
+
 void testLeafCounts(const std::vector<CombinatorEvolve::CombinatorExpression>& initialExpressions,
                     const CombinatorEvolve::ExpressionID initialRoot,
                     const std::vector<uint64_t>& expectedAnswer) {
   CombinatorEvolve::CombinatorSystem system(initialExpressions, initialRoot);
 
-  XCTAssertEqual(system.evolve(expectedAnswer.size() - 1, shouldAbort), expectedAnswer.size() - 1);
+  XCTAssertEqual(system.evolve(skRules, expectedAnswer.size() - 1, shouldAbort), expectedAnswer.size() - 1);
 
   const auto leafCounts = system.leafCounts();
   const auto leafCountsMPZ = system.leafCountsMPZ();
@@ -97,10 +106,10 @@ void testLeafCounts(const std::vector<CombinatorEvolve::CombinatorExpression>& i
 - (void)testOverflow {
   CombinatorEvolve::CombinatorSystem system({{-2, -2}, {0, -2}, {1, 0}, {2, -2}, {3, -2}}, 4);
 
-  XCTAssertEqual(system.evolve(3000, shouldAbort), 3000);
+  XCTAssertEqual(system.evolve(skRules, 3000, shouldAbort), 3000);
   XCTAssertNoThrow(system.leafCounts());
 
-  XCTAssertEqual(system.evolve(1000, shouldAbort), 1000);
+  XCTAssertEqual(system.evolve(skRules, 1000, shouldAbort), 1000);
   XCTAssertThrows(system.leafCounts());
   XCTAssertNoThrow(system.leafCountsMPZ());
 }
@@ -108,7 +117,7 @@ void testLeafCounts(const std::vector<CombinatorEvolve::CombinatorExpression>& i
 - (void)testPositive {
   CombinatorEvolve::CombinatorSystem system({{-2, -2}, {0, -2}, {1, 0}, {2, -2}, {3, -2}}, 4);
 
-  XCTAssertEqual(system.evolve(1500, shouldAbort), 1500);
+  XCTAssertEqual(system.evolve(skRules, 1500, shouldAbort), 1500);
 
   const auto leafCounts = system.leafCountsMPZ();
   for (int i = 0; i < 1500; ++i) {
@@ -116,12 +125,24 @@ void testLeafCounts(const std::vector<CombinatorEvolve::CombinatorExpression>& i
   }
 }
 
+- (void)testNoRules {
+  CombinatorEvolve::CombinatorSystem system({}, -2);
+  XCTAssertEqual(system.evolve(CombinatorEvolve::CombinatorRules({}, {}), 5, shouldAbort), 0);
+  XCTAssertEqual(system.leafCounts(), std::vector<uint64_t>({1}));
+}
+
+- (void)testFlippingRule {
+  CombinatorEvolve::CombinatorSystem system({{-2, -3}}, 0);
+  XCTAssertEqual(system.evolve({{{2, 3}, {3, 2}}, {{0, 1}}}, 5, shouldAbort), 5);
+  XCTAssertEqual(system.leafCounts(), std::vector<uint64_t>({2, 2, 2, 2, 2, 2}));
+}
+
 CombinatorEvolve::CombinatorSystem runEvolution(
     const std::vector<CombinatorEvolve::CombinatorExpression>& initialExpressions,
     const CombinatorEvolve::ExpressionID initialRoot,
     const int stepCount) {
   CombinatorEvolve::CombinatorSystem system(initialExpressions, initialRoot);
-  system.evolve(stepCount, shouldAbort);
+  system.evolve(skRules, stepCount, shouldAbort);
   return system;
 }
 

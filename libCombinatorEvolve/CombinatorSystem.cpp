@@ -1,6 +1,8 @@
 #include "CombinatorSystem.hpp"
 
+#include <algorithm>
 #include <limits>
+#include <unordered_set>
 
 namespace CombinatorEvolve {
 struct PairHash {
@@ -12,30 +14,46 @@ struct PairHash {
   }
 };
 
+struct ExpressionWithMetadata {
+  CombinatorExpression expression;
+  ExpressionID successor;
+  ExpressionID isFullyEvolved;
+
+  explicit ExpressionWithMetadata(const CombinatorExpression& rawExpression)
+      : expression(rawExpression), successor(nullExpression), isFullyEvolved(false) {}
+};
+
 class CombinatorSystem::Implementation {
  private:
-  std::vector<CombinatorExpression> expressions_;
+  std::vector<ExpressionWithMetadata> expressions_;
   std::unordered_map<std::pair<ExpressionID, ExpressionID>, ExpressionID, PairHash> contentsToExpressions_;
   std::vector<ExpressionID> evolutionRoots_;
 
  public:
   Implementation(const std::vector<CombinatorExpression>& initialExpressions, const ExpressionID initialRoot)
-      : expressions_(initialExpressions), evolutionRoots_({initialRoot}) {
-    for (int i = 0; i < expressions_.size(); ++i) {
-      contentsToExpressions_[{expressions_[i].headID, expressions_[i].argumentID}] = i;
+      : evolutionRoots_({initialRoot}) {
+    for (int i = 0; i < initialExpressions.size(); ++i) {
+      expressions_.push_back(ExpressionWithMetadata(initialExpressions[i]));
+      contentsToExpressions_[{expressions_[i].expression.headID, expressions_[i].expression.argumentID}] = i;
     }
   }
 
-  int64_t evolve(const int64_t eventsCount, const std::function<bool()>& shouldAbort) {
+  int64_t evolve(const CombinatorRules& rules, const int64_t eventsCount, const std::function<bool()>& shouldAbort) {
     int64_t eventsDone = 0;
+
+    // This is actually local to the matching algorithm. However, constantly reallocating memory for this takes a lot
+    // of time. So, it is created here. For parallelization, there will need to be one copy of these per each thread.
+    std::vector<ExpressionID> inputPatternsToExpressions(rules.variablesCount - rules.expressions.size(),
+                                                         nullExpression);
+
     while (eventsDone < eventsCount) {
       if (shouldAbort()) return eventsDone;
-      if (evolveOnce(evolutionRoots_.back())) {
+      if (evolveOnce(rules, evolutionRoots_.back(), &inputPatternsToExpressions)) {
         evolutionRoots_.push_back(successor(evolutionRoots_.back()));
         expressions_[evolutionRoots_[evolutionRoots_.size() - 2]].successor = nullExpression;
         ++eventsDone;
       } else {
-        return eventsCount;
+        return eventsDone;
       }
     }
     return eventsDone;
@@ -56,7 +74,7 @@ class CombinatorSystem::Implementation {
     if (root < 0) {
       return nullExpression;
     } else {
-      return expressions_[root].headID;
+      return expressions_[root].expression.headID;
     }
   }
 
@@ -64,7 +82,7 @@ class CombinatorSystem::Implementation {
     if (root < 0) {
       return nullExpression;
     } else {
-      return expressions_[root].argumentID;
+      return expressions_[root].expression.argumentID;
     }
   }
 
@@ -76,17 +94,28 @@ class CombinatorSystem::Implementation {
     }
   }
 
-  int evolveOnce(const ExpressionID root) {
+  int evolveOnce(const CombinatorRules& rules,
+                 const ExpressionID root,
+                 std::vector<ExpressionID>* inputPatternsToExpressions) {
     if (root < 0) return 0;
-    if (expressions_[root].isDownstreamEvolutionComplete) return 0;
+    if (expressions_[root].isFullyEvolved) return 0;
 
     bool didEvolve = false;
 
-    if (trySEvolve(root) || tryKEvolve(root)) {
-      didEvolve = true;
+    for (int i = 0; i < rules.roots.size(); ++i) {
+      if (tryEvolvingUsingRule(rules.expressions,
+                               rules.roots[i].first,
+                               rules.shortcuts[i],
+                               rules.blueprints[i],
+                               root,
+                               inputPatternsToExpressions)) {
+        didEvolve = true;
+        break;
+      }
     }
 
-    if (!didEvolve && (evolveOnce(head(root)) || evolveOnce(argument(root)))) {
+    if (!didEvolve && (evolveOnce(rules, head(root), inputPatternsToExpressions) ||
+                       evolveOnce(rules, argument(root), inputPatternsToExpressions))) {
       updateFromDownstream(root);
       didEvolve = true;
     }
@@ -94,30 +123,95 @@ class CombinatorSystem::Implementation {
     if (didEvolve) {
       return 1;
     } else {
-      if (isDownstreamEvolutionComplete(root)) expressions_[root].isDownstreamEvolutionComplete = true;
+      if (isDownstreamEvolutionComplete(root)) expressions_[root].isFullyEvolved = true;
       return 0;
     }
   }
 
-  int trySEvolve(const ExpressionID root) {
-    if (head(head(head(root))) == combinatorS) {
-      const ExpressionID newHead = newExpression(argument(head(head(root))), argument(root));
-      const ExpressionID newArgument = newExpression(argument(head(root)), argument(root));
-      const ExpressionID successorExpression = newExpression(newHead, newArgument);
-      expressions_[root].successor = successorExpression;
-      return 1;
+  int tryEvolvingUsingRule(const std::vector<CombinatorExpression>& ruleExpressions,
+                           const ExpressionID inputRoot,
+                           const InputShortcut& shortcut,
+                           const OutputBlueprint& blueprint,
+                           const ExpressionID root,
+                           std::vector<ExpressionID>* inputPatternsToExpressions) {
+    if (!matchExpression(root, inputRoot, shortcut, ruleExpressions, inputPatternsToExpressions)) return 0;
+    expressions_[root].successor = createExpressions(blueprint.newRoot, blueprint.newExpressionBlueprints, root);
+    return 1;
+  }
+
+  bool matchExpression(ExpressionID root,
+                       ExpressionID patternRoot,
+                       const InputShortcut& shortcut,
+                       const std::vector<CombinatorExpression>& patternExpressions,
+                       std::vector<ExpressionID>* inputPatternsToExpressions) {
+    if (shortcut.isAvailable()) {
+      return isMatchableUsingShortcut(root, shortcut);
     } else {
-      return 0;
+      std::fill(inputPatternsToExpressions->begin(), inputPatternsToExpressions->end(), nullExpression);
+      return matchWithoutShortcut(root, patternRoot, patternExpressions, inputPatternsToExpressions);
     }
   }
 
-  int tryKEvolve(const ExpressionID root) {
-    if (head(head(root)) == combinatorK) {
-      expressions_[root].successor = argument(head(root));
-      return 1;
-    } else {
-      return 0;
+  bool isMatchableUsingShortcut(ExpressionID root, const InputShortcut& shortcut) {
+    ExpressionID expressionToCheck = root;
+    for (int i = 0; i < shortcut.headDepth; ++i) {
+      expressionToCheck = head(expressionToCheck);
     }
+    return expressionToCheck == shortcut.nestedHeadID;
+  }
+
+  bool matchWithoutShortcut(ExpressionID root,
+                            ExpressionID patternRoot,
+                            const std::vector<CombinatorExpression>& patternExpressions,
+                            std::vector<ExpressionID>* inputPatternsToExpressions) {
+    if (patternRoot < 0) {
+      return root == patternRoot;
+    } else if (patternRoot >= patternExpressions.size()) {  // pattern
+      if ((*inputPatternsToExpressions)[patternRoot - patternExpressions.size()] != nullExpression) {
+        return (*inputPatternsToExpressions)[patternRoot - patternExpressions.size()] == root;
+      } else {
+        (*inputPatternsToExpressions)[patternRoot - patternExpressions.size()] = root;
+        return true;
+      }
+    } else {
+      return matchWithoutShortcut(
+                 head(root), patternExpressions[patternRoot].headID, patternExpressions, inputPatternsToExpressions) &&
+             matchWithoutShortcut(argument(root),
+                                  patternExpressions[patternRoot].argumentID,
+                                  patternExpressions,
+                                  inputPatternsToExpressions);
+    }
+  }
+
+  ExpressionID createExpressions(
+      const ExpressionReference currentRoot,
+      const std::vector<std::pair<ExpressionReference, ExpressionReference>>& otherExpressionBlueprints,
+      const ExpressionID fullDAGRoot) {
+    if (currentRoot.type == ExpressionReferenceType::Constant) {
+      return currentRoot.constantID;
+    } else if (currentRoot.type == ExpressionReferenceType::ExistingExpression) {
+      return followPath(fullDAGRoot, currentRoot.pathToExisting);
+    } else {
+      // we need to create a new expression
+      return newExpression(createExpressions(otherExpressionBlueprints[currentRoot.createdExpressionIndex].first,
+                                             otherExpressionBlueprints,
+                                             fullDAGRoot),
+                           createExpressions(otherExpressionBlueprints[currentRoot.createdExpressionIndex].second,
+                                             otherExpressionBlueprints,
+                                             fullDAGRoot));
+    }
+  }
+
+  ExpressionID followPath(const ExpressionID root, const std::vector<int>& path) {
+    ExpressionID result = root;
+    for (const auto direction : path) {
+      if (direction == 0) {
+        result = head(result);
+      } else {
+        result = argument(result);
+      }
+    }
+    return result;
   }
 
   // Will use existing one if possible
@@ -125,7 +219,7 @@ class CombinatorSystem::Implementation {
     if (contentsToExpressions_.count({head, argument})) {
       return contentsToExpressions_[{head, argument}];
     } else {
-      expressions_.push_back({head, argument});
+      expressions_.push_back(ExpressionWithMetadata({head, argument}));
       return expressions_.size() - 1;
     }
   }
@@ -134,7 +228,7 @@ class CombinatorSystem::Implementation {
     ExpressionID headSuccessor = successor(head(root));
     ExpressionID argumentSuccessor = successor(argument(root));
 
-    std::pair<ExpressionID, ExpressionID> newContents;
+    CombinatorExpression newContents;
     if (headSuccessor != nullExpression) {
       newContents = {headSuccessor, argument(root)};
       expressions_[head(root)].successor = nullExpression;
@@ -145,12 +239,12 @@ class CombinatorSystem::Implementation {
       throw Error::InconsistentDownstreamUpdate;
     }
 
-    expressions_[root].successor = newExpression(newContents.first, newContents.second);
+    expressions_[root].successor = newExpression(newContents.headID, newContents.argumentID);
   }
 
   bool isDownstreamEvolutionComplete(const ExpressionID root) {
-    return ((head(root) < 0 || expressions_[head(root)].isDownstreamEvolutionComplete) &&
-            (argument(root) < 0 || expressions_[argument(root)].isDownstreamEvolutionComplete));
+    return (head(root) < 0 || expressions_[head(root)].isFullyEvolved) &&
+           (argument(root) < 0 || expressions_[argument(root)].isFullyEvolved);
   }
 
   uint64_t checkForPossibleOverflow(uint64_t count) {
@@ -177,8 +271,10 @@ CombinatorSystem::CombinatorSystem(const std::vector<CombinatorExpression>& init
                                    const ExpressionID initialRoot)
     : implementation_(std::make_shared<Implementation>(initialExpressions, initialRoot)) {}
 
-int64_t CombinatorSystem::evolve(const int64_t eventsCount, const std::function<bool()>& shouldAbort) {
-  return implementation_->evolve(eventsCount, shouldAbort);
+int64_t CombinatorSystem::evolve(const CombinatorRules& rules,
+                                 const int64_t eventsCount,
+                                 const std::function<bool()>& shouldAbort) {
+  return implementation_->evolve(rules, eventsCount, shouldAbort);
 }
 
 std::vector<uint64_t> CombinatorSystem::leafCounts() const { return implementation_->leafCounts<uint64_t>(); }
