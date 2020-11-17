@@ -8,9 +8,10 @@ Needs["GitLink`"];
 $repoRoot = DirectoryName[$InputFileName];
 
 tests = Hold @ <|
-  "s[s][s][s[s]][s][s] -> 3554" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 3554],
-  "s[s[s]][s][s[s]][s][k] -> 100000" -> SKCombinatorLeftmostOutermostLeafCounts[s[s[s]][s][s[s]][s][k], 100000],
-  "s[s][s][s[s]][s][k[s]] -> 10000" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][k[s]], 10000]
+  "s[s][s][s[s]][s][s] (no overflow)" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 3438],
+  "s[s][s][s[s]][s][s] (overflow)" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 3554],
+  "s[s[s]][s][s[s]][s][k]" -> SKCombinatorLeftmostOutermostLeafCounts[s[s[s]][s][s[s]][s][k], 100000],
+  "s[s][s][s[s]][s][k[s]]" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][k[s]], 10000]
 |>;
 
 $defaultMeasurementsCount = 5;

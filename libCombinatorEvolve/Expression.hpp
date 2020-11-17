@@ -13,7 +13,6 @@ struct CombinatorExpression {
   ExpressionID argumentID;
 
   ExpressionID successor = nullExpression;     // result of the evolution event
-  mpz_class leafCount = -1;                      // downstream leaf count
   bool isDownstreamEvolutionComplete = false;  // nothing left to evolve downstream
 };
 }  // namespace CombinatorEvolve

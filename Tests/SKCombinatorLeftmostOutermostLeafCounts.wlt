@@ -60,7 +60,17 @@
                                   121930, 121590, 123616, 123484, 125510, 125452, 127817, 127685,
                                   131380, 131367, 135062, 134930, 140652, 140594, 150012, 149880,
                                   157968, 157836}}
-      }
+      },
+
+      (* the second one overflows and requires GMP *)
+      VerificationTest[
+        SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 3000],
+        SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 4000][[1 ;; 3001]]
+      ],
+
+      VerificationTest[
+        AllTrue[# > 0 &] @ SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 4000]
+      ]
     }
   |>
 |>

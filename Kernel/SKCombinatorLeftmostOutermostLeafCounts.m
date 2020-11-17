@@ -52,12 +52,16 @@ encodeExpressionsAndRoot[expr_] := ModuleScope[
   }
 ]
 
-decodeLeafCounts[spec_] := ModuleScope[
-  decodedLength = spec[[1]];
-  digitCounts = spec[[2 ;; decodedLength + 1]];
-  (* uint64_t does not seem to be supported, so we deal with overflows manually *)
-  digitLists = TakeList[spec[[decodedLength + 2 ;; ]], digitCounts] /. n_ ? (# < 0 &) :> n + 18446744073709551616;
-  Fold[2^64 # + #2 &, 0, #] & /@ digitLists
+$Int64VectorTypeID = -45735;
+$MPZVectorTypeID = -43083;
+
+decodeLeafCounts[{$Int64VectorTypeID, numbers___}] := {numbers}
+
+decodeLeafCounts[{$MPZVectorTypeID, spec___}] := ModuleScope[
+  decodedLength = {spec}[[1]];
+  digitCounts = {spec}[[2 ;; decodedLength + 1]];
+  digitLists = TakeList[{spec}[[decodedLength + 2 ;; ]], digitCounts];
+  Fold[2^63 # + #2 &, 0, #] & /@ digitLists
 ]
 
 SKCombinatorLeftmostOutermostLeafCounts[initExpr_, eventsCount_] /; $cpp$setReplace =!= $Failed := ModuleScope[

@@ -1,24 +1,27 @@
 #ifndef LIBCOMBINATOREVOLVE_COMBINATORSYSTEM_HPP_
 #define LIBCOMBINATOREVOLVE_COMBINATORSYSTEM_HPP_
 
+#include <gmpxx.h>
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <gmpxx.h>
-
 #include "Expression.hpp"
 
 namespace CombinatorEvolve {
 class CombinatorSystem {
  public:
+  enum class Error { InvalidReference, InconsistentDownstreamUpdate, LeafCountOverflow };
+
   CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions, ExpressionID initialRoot);
 
   int64_t evolve(int64_t eventsCount, const std::function<bool()>& shouldAbort);
 
-  std::vector<mpz_class> leafCounts();
+  std::vector<uint64_t> leafCounts();
+  std::vector<mpz_class> leafCountsMPZ();
 
  private:
   class Implementation;

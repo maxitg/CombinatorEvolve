@@ -1,5 +1,7 @@
 #include "CombinatorSystem.hpp"
 
+#include <limits>
+
 namespace CombinatorEvolve {
 struct PairHash {
   template <class T1, class T2>
@@ -11,8 +13,6 @@ struct PairHash {
 };
 
 class CombinatorSystem::Implementation {
-  enum class Error { InvalidReference, InconsistentDownstreamUpdate };
-
  private:
   std::vector<CombinatorExpression> expressions_;
   std::unordered_map<std::pair<ExpressionID, ExpressionID>, ExpressionID, PairHash> contentsToExpressions_;
@@ -41,10 +41,12 @@ class CombinatorSystem::Implementation {
     return eventsDone;
   }
 
-  std::vector<mpz_class> leafCounts() {
-    std::vector<mpz_class> result;
+  template <typename Number>
+  std::vector<Number> leafCounts() {
+    std::vector<Number> result;
+    std::vector<Number> subexpressionLeafCounts(expressions_.size(), -1);
     for (auto root : evolutionRoots_) {
-      result.push_back(leafCount(root));
+      result.push_back(leafCount<Number>(root, &subexpressionLeafCounts));
     }
     return result;
   }
@@ -151,13 +153,23 @@ class CombinatorSystem::Implementation {
             (argument(root) < 0 || expressions_[argument(root)].isDownstreamEvolutionComplete));
   }
 
-  mpz_class leafCount(const ExpressionID root) {
+  uint64_t checkForPossibleOverflow(uint64_t count) {
+    if (count > std::numeric_limits<uint64_t>::max() / 4) throw Error::LeafCountOverflow;
+    return count;
+  }
+
+  mpz_class checkForPossibleOverflow(mpz_class count) { return count; }
+
+  template <typename Number>
+  Number leafCount(const ExpressionID root, std::vector<Number>* subexpressionLeafCounts) {
     if (root < 0) return 1;
     if (root >= expressions_.size()) throw Error::InvalidReference;
-    if (expressions_[root].leafCount == -1) {
-      expressions_[root].leafCount = leafCount(head(root)) + leafCount(argument(root));
+    if (subexpressionLeafCounts->at(root) == -1) {
+      (*subexpressionLeafCounts)[root] =
+          checkForPossibleOverflow(leafCount<Number>(head(root), subexpressionLeafCounts)) +
+          checkForPossibleOverflow(leafCount<Number>(argument(root), subexpressionLeafCounts));
     }
-    return expressions_[root].leafCount;
+    return subexpressionLeafCounts->at(root);
   }
 };
 
@@ -169,5 +181,7 @@ int64_t CombinatorSystem::evolve(const int64_t eventsCount, const std::function<
   return implementation_->evolve(eventsCount, shouldAbort);
 }
 
-std::vector<mpz_class> CombinatorSystem::leafCounts() { return implementation_->leafCounts(); }
+std::vector<uint64_t> CombinatorSystem::leafCounts() { return implementation_->leafCounts<uint64_t>(); }
+
+std::vector<mpz_class> CombinatorSystem::leafCountsMPZ() { return implementation_->leafCounts<mpz_class>(); }
 }  // namespace CombinatorEvolve
