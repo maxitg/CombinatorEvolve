@@ -3,9 +3,9 @@
 Needs["GeneralUtilities`"];
 Needs["GitLink`"];
 
-<< CombinatorEvolve`;
-
 $repoRoot = DirectoryName[$InputFileName];
+
+Get[FileNameJoin[{$repoRoot, "Kernel", "init.m"}]];
 
 tests = Hold @ <|
   "s[s][s][s[s]][s][s] (no overflow)" -> SKCombinatorLeftmostOutermostLeafCounts[s[s][s][s[s]][s][s], 3438],
