@@ -20,8 +20,8 @@ class CombinatorSystem {
 
   int64_t evolve(int64_t eventsCount, const std::function<bool()>& shouldAbort);
 
-  std::vector<uint64_t> leafCounts();
-  std::vector<mpz_class> leafCountsMPZ();
+  std::vector<uint64_t> leafCounts() const;
+  std::vector<mpz_class> leafCountsMPZ() const;
 
  private:
   class Implementation;

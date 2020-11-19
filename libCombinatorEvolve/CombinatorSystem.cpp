@@ -181,7 +181,7 @@ int64_t CombinatorSystem::evolve(const int64_t eventsCount, const std::function<
   return implementation_->evolve(eventsCount, shouldAbort);
 }
 
-std::vector<uint64_t> CombinatorSystem::leafCounts() { return implementation_->leafCounts<uint64_t>(); }
+std::vector<uint64_t> CombinatorSystem::leafCounts() const { return implementation_->leafCounts<uint64_t>(); }
 
-std::vector<mpz_class> CombinatorSystem::leafCountsMPZ() { return implementation_->leafCounts<mpz_class>(); }
+std::vector<mpz_class> CombinatorSystem::leafCountsMPZ() const { return implementation_->leafCounts<mpz_class>(); }
 }  // namespace CombinatorEvolve
