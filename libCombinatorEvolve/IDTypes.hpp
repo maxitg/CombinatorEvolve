@@ -2,6 +2,7 @@
 #define LIBCOMBINATOREVOLVE_IDTYPES_HPP_
 
 #include <stdio.h>
+#include <inttypes.h>
 
 namespace CombinatorEvolve {
 using ExpressionID = int64_t;
