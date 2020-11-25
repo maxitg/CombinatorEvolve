@@ -28,10 +28,13 @@ class CombinatorSystem::Implementation {
   std::vector<ExpressionWithMetadata> expressions_;
   std::unordered_map<std::pair<ExpressionID, ExpressionID>, ExpressionID, PairHash> contentsToExpressions_;
   std::vector<ExpressionID> evolutionRoots_;
+  EvaluationOrder evaluationOrder_;
 
  public:
-  Implementation(const std::vector<CombinatorExpression>& initialExpressions, const ExpressionID initialRoot)
-      : evolutionRoots_({initialRoot}) {
+  Implementation(const std::vector<CombinatorExpression>& initialExpressions,
+                 const ExpressionID initialRoot,
+                 const EvaluationOrder evaluationOrder)
+      : evolutionRoots_({initialRoot}), evaluationOrder_(evaluationOrder) {
     for (int i = 0; i < initialExpressions.size(); ++i) {
       expressions_.push_back(ExpressionWithMetadata(initialExpressions[i]));
       contentsToExpressions_[{expressions_[i].expression.headID, expressions_[i].expression.argumentID}] = i;
@@ -102,22 +105,12 @@ class CombinatorSystem::Implementation {
 
     bool didEvolve = false;
 
-    for (int i = 0; i < rules.roots.size(); ++i) {
-      if (tryEvolvingUsingRule(rules.expressions,
-                               rules.roots[i].first,
-                               rules.shortcuts[i],
-                               rules.blueprints[i],
-                               root,
-                               inputPatternsToExpressions)) {
-        didEvolve = true;
-        break;
-      }
-    }
-
-    if (!didEvolve && (evolveOnce(rules, head(root), inputPatternsToExpressions) ||
-                       evolveOnce(rules, argument(root), inputPatternsToExpressions))) {
-      updateFromDownstream(root);
-      didEvolve = true;
+    if (evaluationOrder_ == EvaluationOrder::LeftmostOutermost) {
+      didEvolve = tryEvolvingUsingRules(rules, root, inputPatternsToExpressions) ||
+                  tryEvolvingDownstream(rules, root, inputPatternsToExpressions);
+    } else {
+      didEvolve = tryEvolvingDownstream(rules, root, inputPatternsToExpressions) ||
+                  tryEvolvingUsingRules(rules, root, inputPatternsToExpressions);
     }
 
     if (didEvolve) {
@@ -126,6 +119,33 @@ class CombinatorSystem::Implementation {
       if (isDownstreamEvolutionComplete(root)) expressions_[root].isFullyEvolved = true;
       return 0;
     }
+  }
+
+  bool tryEvolvingUsingRules(const CombinatorRules& rules,
+                             const ExpressionID root,
+                             std::vector<ExpressionID>* inputPatternsToExpressions) {
+    for (int i = 0; i < rules.roots.size(); ++i) {
+      if (tryEvolvingUsingRule(rules.expressions,
+                               rules.roots[i].first,
+                               rules.shortcuts[i],
+                               rules.blueprints[i],
+                               root,
+                               inputPatternsToExpressions)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool tryEvolvingDownstream(const CombinatorRules& rules,
+                             const ExpressionID root,
+                             std::vector<ExpressionID>* inputPatternsToExpressions) {
+    if (evolveOnce(rules, head(root), inputPatternsToExpressions) ||
+        evolveOnce(rules, argument(root), inputPatternsToExpressions)) {
+      updateFromDownstream(root);
+      return true;
+    }
+    return false;
   }
 
   int tryEvolvingUsingRule(const std::vector<CombinatorExpression>& ruleExpressions,
@@ -268,8 +288,9 @@ class CombinatorSystem::Implementation {
 };
 
 CombinatorSystem::CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions,
-                                   const ExpressionID initialRoot)
-    : implementation_(std::make_shared<Implementation>(initialExpressions, initialRoot)) {}
+                                   const ExpressionID initialRoot,
+                                   const EvaluationOrder evaluationOrder)
+    : implementation_(std::make_shared<Implementation>(initialExpressions, initialRoot, evaluationOrder)) {}
 
 int64_t CombinatorSystem::evolve(const CombinatorRules& rules,
                                  const int64_t eventsCount,

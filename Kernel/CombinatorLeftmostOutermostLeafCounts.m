@@ -4,6 +4,7 @@ PackageImport["GeneralUtilities`"]
 
 PackageScope["unloadLibrary"]
 
+PackageExport["CombinatorLeafCounts"]
 PackageExport["CombinatorLeftmostOutermostLeafCounts"]
 PackageExport["SKCombinatorLeftmostOutermostLeafCounts"]
 
@@ -32,12 +33,13 @@ unloadLibrary[] := If[StringQ[$libraryFile],
 cpp$combinatorLeftmostOutermostLeafCounts = If[$libraryFile =!= $Failed,
   LibraryFunctionLoad[
     $libraryFile,
-    "combinatorLeftmostOutermostLeafCounts",
+    "combinatorLeafCounts",
     {{Integer, 2},  (* rule expressions *)
      {Integer, 2},  (* rule roots *)
      {Integer, 2},  (* init expressions *)
      Integer,       (* root *)
-     Integer},      (* events count *)
+     Integer,       (* events count *)
+     Integer},      (* evaluation order *)
     {Integer, 1}],  (* leaf counts *)
   $Failed];
 
@@ -85,7 +87,12 @@ SKCombinatorLeftmostOutermostLeafCounts[initExpr_, eventsCount_] /; $libraryFile
   CombinatorLeftmostOutermostLeafCounts[
     {Global`s[a_][b_][c_] :> a[c][b[c]], Global`k[a_][b_] :> a}, initExpr, eventsCount]
 
-CombinatorLeftmostOutermostLeafCounts[rules_, initExpr_, eventsCount_] /; $libraryFile =!= $Failed := ModuleScope[
+CombinatorLeftmostOutermostLeafCounts[rules_, initExpr_, eventsCount_] :=
+  CombinatorLeafCounts[rules, initExpr, eventsCount, "LeftmostOutermost"]
+
+$evaluationOrderCodes = <|"LeftmostOutermost" -> 0, "LeftmostInnermost" -> 1|>;
+
+CombinatorLeafCounts[rules_, initExpr_, eventsCount_, evaluationOrder_] /; $libraryFile =!= $Failed := ModuleScope[
   patternAtoms = First /@ Union[Cases[First /@ rules, _Pattern, All, Heads -> True]];
   ruleConstants = Complement[
     Union @ Cases[rules, _ ? AtomQ, All, Heads -> True], 
@@ -98,6 +105,7 @@ CombinatorLeftmostOutermostLeafCounts[rules_, initExpr_, eventsCount_] /; $libra
       Range[Min[ruleConstantIDs] - 1, Min[ruleConstantIDs] - Length[additionalInitConstants], -1]]],
     ruleConstantIDs];
 
-  decodeLeafCounts[cpp$combinatorLeftmostOutermostLeafCounts[##, eventsCount] & @@
-    Join[encodeRules[rules, patternAtoms, ruleConstantIDs], encodeExpressionsAndRoot[initExpr, initConstantIDs]]]
+  decodeLeafCounts[
+    cpp$combinatorLeftmostOutermostLeafCounts[##, eventsCount, Replace[evaluationOrder, $evaluationOrderCodes]] & @@
+      Join[encodeRules[rules, patternAtoms, ruleConstantIDs], encodeExpressionsAndRoot[initExpr, initConstantIDs]]]
 ]

@@ -13,11 +13,15 @@
 #include "Rule.hpp"
 
 namespace CombinatorEvolve {
+enum class EvaluationOrder { LeftmostOutermost, LeftmostInnermost };
+
 class CombinatorSystem {
  public:
   enum class Error { InvalidReference, InconsistentDownstreamUpdate, LeafCountOverflow };
 
-  CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions, ExpressionID initialRoot);
+  CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions,
+                   ExpressionID initialRoot,
+                   EvaluationOrder evaluationOrder);
 
   int64_t evolve(const CombinatorRules& rules, int64_t eventsCount, const std::function<bool()>& shouldAbort);
 

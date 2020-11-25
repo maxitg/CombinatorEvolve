@@ -111,8 +111,8 @@ std::function<bool()> shouldAbort(WolframLibraryData libData) {
   return [libData]() { return static_cast<bool>(libData->AbortQ()); };
 }
 
-int combinatorLeftmostOutermostLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
-  if (argc != 5) {  // rule expressions + rule roots + init expressions + root + events count
+int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  if (argc != 6) {  // rule expressions + rule roots + init expressions + root + events count
     return LIBRARY_FUNCTION_ERROR;
   }
   try {
@@ -121,8 +121,9 @@ int combinatorLeftmostOutermostLeafCounts(WolframLibraryData libData, mint argc,
         getCombinatorExpressions(libData, MArgument_getMTensor(argv[2]));
     ExpressionID initialRoot = MArgument_getInteger(argv[3]);
     int64_t eventsCount = MArgument_getInteger(argv[4]);
+    EvaluationOrder evaluationOrder = static_cast<EvaluationOrder>(MArgument_getInteger(argv[5]));
 
-    CombinatorSystem system(initialExpressions, initialRoot);
+    CombinatorSystem system(initialExpressions, initialRoot, evaluationOrder);
     system.evolve(rules, eventsCount, shouldAbort(libData));
     try {
       std::vector<uint64_t> leafCounts = system.leafCounts();
@@ -146,9 +147,6 @@ EXTERN_C int WolframLibrary_initialize([[maybe_unused]] WolframLibraryData libDa
 
 EXTERN_C void WolframLibrary_uninitialize([[maybe_unused]] WolframLibraryData libData) { return; }
 
-EXTERN_C int combinatorLeftmostOutermostLeafCounts(WolframLibraryData libData,
-                                                   mint argc,
-                                                   MArgument* argv,
-                                                   MArgument result) {
-  return CombinatorEvolve::combinatorLeftmostOutermostLeafCounts(libData, argc, argv, result);
+EXTERN_C int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  return CombinatorEvolve::combinatorLeafCounts(libData, argc, argv, result);
 }
