@@ -25,6 +25,8 @@ class CombinatorSystem {
 
   int64_t evolve(const CombinatorRules& rules, int64_t eventsCount, const std::function<bool()>& shouldAbort);
 
+  std::pair<std::vector<CombinatorExpression>, ExpressionID> finalExpressionsAndRoot() const;
+
   std::vector<uint64_t> leafCounts() const;
   std::vector<mpz_class> leafCountsMPZ() const;
 

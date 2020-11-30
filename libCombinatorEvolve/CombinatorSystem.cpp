@@ -62,6 +62,17 @@ class CombinatorSystem::Implementation {
     return eventsDone;
   }
 
+  std::pair<std::vector<CombinatorExpression>, ExpressionID> finalExpressionsAndRoot() const {
+    std::vector<CombinatorExpression> result;
+    std::unordered_map<ExpressionID, int> expressionIDToIndex;
+    collectExpressions(evolutionRoots_.back(), &result, &expressionIDToIndex);
+    for (auto& expression : result) {
+      expression.headID = remapExpressionIDToIndex(expression.headID, expressionIDToIndex);
+      expression.argumentID = remapExpressionIDToIndex(expression.argumentID, expressionIDToIndex);
+    }
+    return {result, remapExpressionIDToIndex(evolutionRoots_.back(), expressionIDToIndex)};
+  }
+
   template <typename Number>
   std::vector<Number> leafCounts() {
     std::vector<Number> result;
@@ -73,7 +84,7 @@ class CombinatorSystem::Implementation {
   }
 
  private:
-  ExpressionID head(const ExpressionID root) {
+  ExpressionID head(const ExpressionID root) const {
     if (root < 0) {
       return nullExpression;
     } else {
@@ -81,7 +92,7 @@ class CombinatorSystem::Implementation {
     }
   }
 
-  ExpressionID argument(const ExpressionID root) {
+  ExpressionID argument(const ExpressionID root) const {
     if (root < 0) {
       return nullExpression;
     } else {
@@ -285,6 +296,27 @@ class CombinatorSystem::Implementation {
     }
     return subexpressionLeafCounts->at(root);
   }
+
+  void collectExpressions(const ExpressionID root,
+                          std::vector<CombinatorExpression>* result,
+                          std::unordered_map<ExpressionID, int>* expressionIDToIndex) const {
+    if (root < 0) return;
+    if (expressionIDToIndex->count(root)) return;
+    expressionIDToIndex->insert({root, result->size()});
+    result->push_back(expressions_[root].expression);
+    collectExpressions(head(root), result, expressionIDToIndex);
+    collectExpressions(argument(root), result, expressionIDToIndex);
+  }
+
+  // assumes positive expression IDs exist in expressionIDToIndex
+  ExpressionID remapExpressionIDToIndex(const ExpressionID expressionID,
+                                        const std::unordered_map<ExpressionID, int>& expressionIDToIndex) const {
+    if (expressionID < 0) {
+      return expressionID;
+    } else {
+      return expressionIDToIndex.at(expressionID);
+    }
+  }
 };
 
 CombinatorSystem::CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions,
@@ -296,6 +328,10 @@ int64_t CombinatorSystem::evolve(const CombinatorRules& rules,
                                  const int64_t eventsCount,
                                  const std::function<bool()>& shouldAbort) {
   return implementation_->evolve(rules, eventsCount, shouldAbort);
+}
+
+std::pair<std::vector<CombinatorExpression>, ExpressionID> CombinatorSystem::finalExpressionsAndRoot() const {
+  return implementation_->finalExpressionsAndRoot();
 }
 
 std::vector<uint64_t> CombinatorSystem::leafCounts() const { return implementation_->leafCounts<uint64_t>(); }

@@ -11,4 +11,9 @@ EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result);
 
+EXTERN_C DLLEXPORT int combinatorFinalExpression(WolframLibraryData libData,
+                                                 mint argc,
+                                                 MArgument* argv,
+                                                 MArgument result);
+
 #endif  // LIBCOMBINATOREVOLVE_COMBINATOREVOLVE_HPP_

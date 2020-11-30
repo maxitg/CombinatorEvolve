@@ -30,6 +30,27 @@ std::vector<CombinatorExpression> getCombinatorExpressions(WolframLibraryData li
   return expressions;
 }
 
+MTensor putCombinatorExpressions(const std::vector<CombinatorExpression>& expressions,
+                                 const ExpressionID root,
+                                 WolframLibraryData libData) {
+  const mint dimensions[1] = {1 + static_cast<mint>(2 * expressions.size())};
+  MTensor output;
+  libData->MTensor_new(MType_Integer, 1, dimensions, &output);
+
+  mint writeIndex = 0;
+  mint position[1];
+  position[0] = ++writeIndex;
+  libData->MTensor_setInteger(output, position, root);
+  for (const auto& expression : expressions) {
+    position[0] = ++writeIndex;
+    libData->MTensor_setInteger(output, position, expression.headID);
+    position[0] = ++writeIndex;
+    libData->MTensor_setInteger(output, position, expression.argumentID);
+  }
+
+  return output;
+}
+
 CombinatorRules getCombinatorRules(WolframLibraryData libData, MTensor expressionsTensor, MTensor rootsTensor) {
   std::vector<CombinatorExpression> expressions = getCombinatorExpressions(libData, expressionsTensor);
   std::vector<std::pair<ExpressionID, ExpressionID>> roots;
@@ -111,20 +132,25 @@ std::function<bool()> shouldAbort(WolframLibraryData libData) {
   return [libData]() { return static_cast<bool>(libData->AbortQ()); };
 }
 
-int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+CombinatorSystem evolvedSystem(WolframLibraryData libData, mint argc, MArgument* argv) {
   if (argc != 6) {  // rule expressions + rule roots + init expressions + root + events count
-    return LIBRARY_FUNCTION_ERROR;
+    throw LIBRARY_FUNCTION_ERROR;
   }
-  try {
-    CombinatorRules rules = getCombinatorRules(libData, MArgument_getMTensor(argv[0]), MArgument_getMTensor(argv[1]));
-    std::vector<CombinatorExpression> initialExpressions =
-        getCombinatorExpressions(libData, MArgument_getMTensor(argv[2]));
-    ExpressionID initialRoot = MArgument_getInteger(argv[3]);
-    int64_t eventsCount = MArgument_getInteger(argv[4]);
-    EvaluationOrder evaluationOrder = static_cast<EvaluationOrder>(MArgument_getInteger(argv[5]));
+  CombinatorRules rules = getCombinatorRules(libData, MArgument_getMTensor(argv[0]), MArgument_getMTensor(argv[1]));
+  std::vector<CombinatorExpression> initialExpressions =
+      getCombinatorExpressions(libData, MArgument_getMTensor(argv[2]));
+  ExpressionID initialRoot = MArgument_getInteger(argv[3]);
+  int64_t eventsCount = MArgument_getInteger(argv[4]);
+  EvaluationOrder evaluationOrder = static_cast<EvaluationOrder>(MArgument_getInteger(argv[5]));
 
-    CombinatorSystem system(initialExpressions, initialRoot, evaluationOrder);
-    system.evolve(rules, eventsCount, shouldAbort(libData));
+  CombinatorSystem system(initialExpressions, initialRoot, evaluationOrder);
+  system.evolve(rules, eventsCount, shouldAbort(libData));
+  return system;
+}
+
+int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  try {
+    const auto system = evolvedSystem(libData, argc, argv);
     try {
       std::vector<uint64_t> leafCounts = system.leafCounts();
       MArgument_setMTensor(result, putVector(leafCounts, libData));
@@ -139,6 +165,16 @@ int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv,
 
   return LIBRARY_NO_ERROR;
 }
+
+int combinatorFinalExpression(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  try {
+    const auto finalExpressions = evolvedSystem(libData, argc, argv).finalExpressionsAndRoot();
+    MArgument_setMTensor(result, putCombinatorExpressions(finalExpressions.first, finalExpressions.second, libData));
+  } catch (...) {
+    return LIBRARY_FUNCTION_ERROR;
+  }
+  return LIBRARY_NO_ERROR;
+}
 }  // namespace CombinatorEvolve
 
 EXTERN_C mint WolframLibrary_getVersion() { return WolframLibraryVersion; }
@@ -149,4 +185,8 @@ EXTERN_C void WolframLibrary_uninitialize([[maybe_unused]] WolframLibraryData li
 
 EXTERN_C int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
   return CombinatorEvolve::combinatorLeafCounts(libData, argc, argv, result);
+}
+
+EXTERN_C int combinatorFinalExpression(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
+  return CombinatorEvolve::combinatorFinalExpression(libData, argc, argv, result);
 }
