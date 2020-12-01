@@ -18,6 +18,7 @@ struct ExpressionWithMetadata {
   CombinatorExpression expression;
   ExpressionID successor;
   ExpressionID isFullyEvolved;
+  int64_t leafCount = -1;
 
   explicit ExpressionWithMetadata(const CombinatorExpression& rawExpression)
       : expression(rawExpression), successor(nullExpression), isFullyEvolved(false) {}
@@ -41,7 +42,7 @@ class CombinatorSystem::Implementation {
     }
   }
 
-  int64_t evolve(const CombinatorRules& rules, const int64_t eventsCount, const std::function<bool()>& shouldAbort) {
+  int64_t evolve(const CombinatorRules& rules, const int64_t eventsCount, const std::function<bool()>& shouldAbort, const int64_t maxLeafCount) {
     int64_t eventsDone = 0;
 
     // This is actually local to the matching algorithm. However, constantly reallocating memory for this takes a lot
@@ -55,6 +56,9 @@ class CombinatorSystem::Implementation {
         evolutionRoots_.push_back(successor(evolutionRoots_.back()));
         expressions_[evolutionRoots_[evolutionRoots_.size() - 2]].successor = nullExpression;
         ++eventsDone;
+        if (maxLeafCount >= 0 && leafCount(evolutionRoots_.back()) > maxLeafCount) {
+          throw Error::EventsCountExceeded;
+        }
       } else {
         return eventsDone;
       }
@@ -255,6 +259,18 @@ class CombinatorSystem::Implementation {
     }
   }
 
+  int64_t leafCount(const ExpressionID expr) {
+    if (expr < 0) {
+      return 1;
+    } else if (expressions_[expr].leafCount > 0) {
+      return expressions_[expr].leafCount;
+    } else {
+      const auto result = leafCount(head(expr)) + leafCount(argument(expr));
+      expressions_[expr].leafCount = result;
+      return result;
+    }
+  }
+
   void updateFromDownstream(const ExpressionID root) {
     ExpressionID headSuccessor = successor(head(root));
     ExpressionID argumentSuccessor = successor(argument(root));
@@ -326,8 +342,9 @@ CombinatorSystem::CombinatorSystem(const std::vector<CombinatorExpression>& init
 
 int64_t CombinatorSystem::evolve(const CombinatorRules& rules,
                                  const int64_t eventsCount,
-                                 const std::function<bool()>& shouldAbort) {
-  return implementation_->evolve(rules, eventsCount, shouldAbort);
+                                 const std::function<bool()>& shouldAbort,
+                                 const int64_t maxLeafCount) {
+  return implementation_->evolve(rules, eventsCount, shouldAbort, maxLeafCount);
 }
 
 std::pair<std::vector<CombinatorExpression>, ExpressionID> CombinatorSystem::finalExpressionsAndRoot() const {

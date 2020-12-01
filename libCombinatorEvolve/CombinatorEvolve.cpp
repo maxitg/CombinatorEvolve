@@ -133,7 +133,7 @@ std::function<bool()> shouldAbort(WolframLibraryData libData) {
 }
 
 CombinatorSystem evolvedSystem(WolframLibraryData libData, mint argc, MArgument* argv) {
-  if (argc != 6) {  // rule expressions + rule roots + init expressions + root + events count
+  if (argc != 7) {  // rule expressions + rule roots + init expressions + root + events count
     throw LIBRARY_FUNCTION_ERROR;
   }
   CombinatorRules rules = getCombinatorRules(libData, MArgument_getMTensor(argv[0]), MArgument_getMTensor(argv[1]));
@@ -142,9 +142,10 @@ CombinatorSystem evolvedSystem(WolframLibraryData libData, mint argc, MArgument*
   ExpressionID initialRoot = MArgument_getInteger(argv[3]);
   int64_t eventsCount = MArgument_getInteger(argv[4]);
   EvaluationOrder evaluationOrder = static_cast<EvaluationOrder>(MArgument_getInteger(argv[5]));
+  int64_t maxLeafCount = MArgument_getInteger(argv[6]);
 
   CombinatorSystem system(initialExpressions, initialRoot, evaluationOrder);
-  system.evolve(rules, eventsCount, shouldAbort(libData));
+  system.evolve(rules, eventsCount, shouldAbort(libData), maxLeafCount);
   return system;
 }
 
@@ -168,7 +169,8 @@ int combinatorLeafCounts(WolframLibraryData libData, mint argc, MArgument* argv,
 
 int combinatorFinalExpression(WolframLibraryData libData, mint argc, MArgument* argv, MArgument result) {
   try {
-    const auto finalExpressions = evolvedSystem(libData, argc, argv).finalExpressionsAndRoot();
+    const auto system = evolvedSystem(libData, argc, argv);
+    const auto finalExpressions = system.finalExpressionsAndRoot();
     MArgument_setMTensor(result, putCombinatorExpressions(finalExpressions.first, finalExpressions.second, libData));
   } catch (...) {
     return LIBRARY_FUNCTION_ERROR;

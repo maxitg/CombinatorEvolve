@@ -17,13 +17,16 @@ enum class EvaluationOrder { LeftmostOutermost, LeftmostInnermost };
 
 class CombinatorSystem {
  public:
-  enum class Error { InvalidReference, InconsistentDownstreamUpdate, LeafCountOverflow };
+  enum class Error { InvalidReference, InconsistentDownstreamUpdate, LeafCountOverflow, EventsCountExceeded };
 
   CombinatorSystem(const std::vector<CombinatorExpression>& initialExpressions,
                    ExpressionID initialRoot,
                    EvaluationOrder evaluationOrder);
 
-  int64_t evolve(const CombinatorRules& rules, int64_t eventsCount, const std::function<bool()>& shouldAbort);
+  int64_t evolve(const CombinatorRules& rules,
+                 int64_t eventsCount,
+                 const std::function<bool()>& shouldAbort,
+                 int64_t maxLeafCount = -1);
 
   std::pair<std::vector<CombinatorExpression>, ExpressionID> finalExpressionsAndRoot() const;
 
