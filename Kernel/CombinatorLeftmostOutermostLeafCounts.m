@@ -85,7 +85,7 @@ decodeLeafCounts[{$MPZVectorTypeID, spec___}] := ModuleScope[
   decodedLength = {spec}[[1]];
   digitCounts = {spec}[[2 ;; decodedLength + 1]];
   digitLists = TakeList[{spec}[[decodedLength + 2 ;; ]], digitCounts];
-  Fold[2^63 # + #2 &, 0, #] & /@ digitLists
+  Fold[2^31 # + #2 &, 0, #] & /@ digitLists
 ]
 
 SKCombinatorLeftmostOutermostLeafCounts[initExpr_, eventsCount_] /; $libraryFile =!= $Failed :=

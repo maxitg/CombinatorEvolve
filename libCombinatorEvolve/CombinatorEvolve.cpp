@@ -96,11 +96,11 @@ MTensor putMPZVector(const std::vector<mpz_class>& data, WolframLibraryData libD
     std::vector<uint64_t> digits;
     mpz_class remainingNumber = number;
     mpz_class digitSize;
-    mpz_pow_ui(digitSize.get_mpz_t(), mpz_class(2).get_mpz_t(), 63);
+    mpz_pow_ui(digitSize.get_mpz_t(), mpz_class(2).get_mpz_t(), 31);
     while (remainingNumber > 0) {
       mpz_class thisDigit = remainingNumber & (digitSize - 1);
       digits.push_back(thisDigit.get_ui());
-      remainingNumber >>= 63;
+      remainingNumber >>= 31;
     }
     lengths.push_back(digits.size());
     allDigits.insert(allDigits.end(), digits.rbegin(), digits.rend());
