@@ -42,7 +42,10 @@ class CombinatorSystem::Implementation {
     }
   }
 
-  int64_t evolve(const CombinatorRules& rules, const int64_t eventsCount, const std::function<bool()>& shouldAbort, const int64_t maxLeafCount) {
+  int64_t evolve(const CombinatorRules& rules,
+                 const int64_t eventsCount,
+                 const std::function<bool()>& shouldAbort,
+                 const int64_t maxLeafCount) {
     int64_t eventsDone = 0;
 
     // This is actually local to the matching algorithm. However, constantly reallocating memory for this takes a lot
