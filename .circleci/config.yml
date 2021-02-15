@@ -76,15 +76,14 @@ jobs:
       - checkout
 
       - run:
-          name: Install CMake
+          name: Install Homebrew
           command: |
-            cmakeURL="https://github.com/Kitware/CMake/releases/download/v3.18.6/cmake-3.18.6-Darwin-x86_64.tar.gz"
-            curl -L --output cmake.tar.gz $cmakeURL
-            tar xf cmake.tar.gz
-            cmakeDir=$(ls | grep cmake-*)
-            mkdir -p /usr/local/bin /usr/local/share
-            cp -r $cmakeDir/CMake.app/Contents/bin/* /usr/local/bin/
-            cp -r $cmakeDir/CMake.app/Contents/share/* /usr/local/share/
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      - run:
+          name: Install Dependencies
+          command: |
+            brew install cmake gmp pkg-config
 
       - run:
           name: Build
