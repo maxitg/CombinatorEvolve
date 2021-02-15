@@ -106,13 +106,9 @@ jobs:
       - checkout
 
       - run:
-          name: Install CMake
+          name: Install Dependencies
           command: |
-            cmakeURL="https://github.com/Kitware/CMake/releases/download/v3.18.6/cmake-3.18.6-win64-x64.zip"
-            curl -L --output cmake.zip $cmakeURL
-            unzip -q cmake.zip
-            cmakeDir=$(dir -1 | findstr -i cmake-*)
-            echo "export PATH=\"$(pwd)/$cmakeDir/bin:$PATH\"" >> $BASH_ENV
+            apt-get install cmake libgmp-dev
 
       - run:
           name: Build
@@ -130,9 +126,9 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-      - macos-build
+#     - macos-build
       - windows-build
-      - wolfram-language-paclet-test:
-          requires:
-            - macos-build
-            - windows-build
+#     - wolfram-language-paclet-test:
+#         requires:
+#           - macos-build
+#           - windows-build
