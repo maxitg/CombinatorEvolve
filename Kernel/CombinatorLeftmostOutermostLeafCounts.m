@@ -9,26 +9,20 @@ PackageExport["CombinatorFinalExpression"]
 PackageExport["CombinatorLeftmostOutermostLeafCounts"]
 PackageExport["SKCombinatorLeftmostOutermostLeafCounts"]
 
-$expectedLibName = "libCombinatorEvolve." <> System`Dump`LibraryExtension[];
-
-findLibraryIn[basePath_] := Scope[
-  libraryPath = FileNameJoin[{basePath, "LibraryResources", $SystemID, $expectedLibName}];
-  If[FileExistsQ[libraryPath], libraryPath, $Failed]
-];
-
-$parentDirectory = FileNameDrop[$InputFileName, -2];
-
-CombinatorLeftmostOutermostLeafCounts::nolibcombinatorEvolve = "Could not locate ``.";
-
-$libraryFile = findLibraryIn[$parentDirectory];
-If[FailureQ[$libraryFile],
-  Message[CombinatorLeftmostOutermostLeafCounts::nolibcombinatorEvolve, $expectedLibName];
-];
-
 unloadLibrary[] := If[StringQ[$libraryFile],
   Scan[LibraryFunctionUnload, $libraryFunctions];
   $libraryFunctions = Null;
   Quiet @ LibraryUnload[$libraryFile];
+];
+
+CombinatorEvolve::nolibcombinatorevolve =
+  "libCombinatorEvolve (``) could not be found, some functionality will not be available.";
+
+$libraryFile = $CombinatorEvolveLibraryPath;
+
+If[!StringQ[$libraryFile] || !FileExistsQ[$libraryFile],
+  Message[CombinatorEvolve::nolibcombinatorevolve, $libraryFile];
+  $libraryFile = $Failed;
 ];
 
 evolutionFunctionLoad[name_] := If[$libraryFile =!= $Failed,
