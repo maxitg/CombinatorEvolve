@@ -1,7 +1,7 @@
 #ifndef LIBCOMBINATOREVOLVE_COMBINATOREVOLVE_HPP_
 #define LIBCOMBINATOREVOLVE_COMBINATOREVOLVE_HPP_
 
-#include "WolframLibrary.h"
+#include "WolframHeaders/WolframLibrary.h"
 
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
