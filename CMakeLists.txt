@@ -72,7 +72,7 @@ set(libCombinatorEvolve_sources
 list(TRANSFORM libCombinatorEvolve_headers PREPEND "libCombinatorEvolve/")
 list(TRANSFORM libCombinatorEvolve_sources PREPEND "libCombinatorEvolve/")
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake/Dependencies ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Dependencies ${CMAKE_MODULE_PATH})
 find_package(GMP REQUIRED)
 
 add_library(CombinatorEvolve ${libCombinatorEvolve_sources})
