@@ -106,13 +106,21 @@ jobs:
       - checkout
 
       - run:
+          name: Install msys2
+          command: |
+            powershell Install-Package -Force 7Zip4Powershell
+            powershell Expand-7Zip msys.tar.xz ./
+            powershell Expand-7Zip msys.tar ./
+
+      - run:
           name: Install Dependencies
           command: |
-            apt-get install cmake libgmp-dev
+            ./msys64/usr/bin/bash.exe -l -c "pacman -S --noconfirm mingw-w64-x86_64-cmake"
+            ./msys64/usr/bin/bash.exe -l -c "pacman -S --noconfirm mingw-x64-x86_64-gmp"
 
       - run:
           name: Build
-          command: scripts/buildLibraryResources.sh
+          command: ./msys64/usr/bin/bash.exe -l -c "scripts/buildLibraryResources.sh"
 
       - persist_to_workspace:
           root: LibraryResources
