@@ -6,7 +6,9 @@ cd "$combinatorEvolveRoot"
 
 # Compute the source hash
 
-sourceFiles="$(ls libCombinatorEvolve/*pp CMakeLists.txt cmake/* scripts/buildLibraryResources.sh)"
+sourceFiles="$(
+  ls libCombinatorEvolve/*pp CMakeLists.txt cmake/*.in cmake/Dependencies/* scripts/buildLibraryResources.sh
+)"
 
 if command -v shasum &>/dev/null; then
   echo "Using SHA tool: $(which shasum)"
