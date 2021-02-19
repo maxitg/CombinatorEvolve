@@ -22,9 +22,6 @@ if(NOT CMAKE_CXX_STANDARD)
     message(STATUS "${PROJECT_NAME} using CMAKE_CXX_STANDARD: ${CMAKE_CXX_STANDARD}")
 endif()
 
-add_library(GMP STATIC IMPORTED)
-find_library(GMP_LIBRARY gmp /usr/local/lib)
-
 # Set extra compile options
 option(COMBINATOR_EVOLVE_ENABLE_ALLWARNINGS
        "Add all compiler warnings to the C++ targets"
