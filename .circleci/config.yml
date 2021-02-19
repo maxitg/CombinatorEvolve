@@ -145,9 +145,9 @@ workflows:
   version: 2
   build-and-test:
     jobs:
-#     - macos-build
+      - macos-build
       - windows-build
-#     - wolfram-language-paclet-test:
-#         requires:
-#           - macos-build
-#           - windows-build
+      - wolfram-language-paclet-test:
+          requires:
+            - macos-build
+            - windows-build
