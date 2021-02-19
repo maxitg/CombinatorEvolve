@@ -5,6 +5,7 @@ find_path(GMP_INCLUDE_DIR gmp.h HINTS ${PKG_gmp_INCLUDEDIR})
 find_library(GMP_LIB gmp HINTS ${PKG_gmp_LIBDIR})
 
 if(GMP_LIB EQUAL "GMP_LIB-NOTFOUND")
+  message(STATUS "not found")
   find_file(GMP_LIB libgmp.dll.a HINTS ${PKG_gmp_LIBDIR})
 endif()
 
