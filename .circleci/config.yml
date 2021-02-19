@@ -115,10 +115,11 @@ jobs:
             cmd_run() {
               cmd.exe /C "$1"
             }
+            declare -f cmd_run >> $BASH_ENV
             msys2_run () {
               cmd_run "msys64\usr\bin\bash.exe -l -c \"PATH=\\\"/mingw64/bin:$PATH\\\" $1\""
             }
-            export -f cmd_run msys2_run >> $BASH_ENV
+            declare -f msys2_run >> $BASH_ENV
             msys2_run "echo \"init\""
 
       - run:
