@@ -13,11 +13,17 @@ Check[
   InstallGitLink[];
 
   buildResult = CombinatorEvolveDevUtils`BuildLibCombinatorEvolve["Verbose" -> True];
-  If[!AssociationQ[buildResult], Exit[1]];
+  If[!AssociationQ[buildResult],
+    Print["Building failed."];
+    Exit[1]
+  ];
 
-  packResult = CombinatorEvolveDevUtils`PackLibCombinatorEvolve["Verbose" -> True];
+  packResult = CombinatorEvolveDevUtils`PackCombinatorEvolve["Verbose" -> True];
   pacletLocation = packResult["Location"];
-  If[!StringQ[pacletLocation], Exit[1]];
+  If[!StringQ[pacletLocation],
+    Print["Packing failed."];
+    Exit[1]
+  ];
 
   previousPaclets = PacletFind["CombinatorEvolve"];
   If[previousPaclets =!= {},

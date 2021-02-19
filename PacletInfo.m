@@ -1,6 +1,6 @@
 Paclet[
   Name -> "CombinatorEvolve",
-  Version -> "0.0.5",
+  Version -> "0.1",
   MathematicaVersion -> "12.1+",
   Description -> "CombinatorEvolve computes SK combinator leaf counts.",
   Creator -> "Wolfram Research",

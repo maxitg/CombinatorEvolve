@@ -10,10 +10,13 @@ jobs:
         auth:
           username: maxitg
           password: $DOCKERHUB_PASSWORD
-    parallelism: 4
 
     steps:
       - checkout
+
+      - run:
+          name: Install GMP
+          command: apt-get update && apt-get -y install libgmp-dev
 
       - run:
           name: Build
@@ -42,23 +45,7 @@ jobs:
 
       - run:
           name: Test
-          command: |
-            if [ $CIRCLE_NODE_INDEX -eq 2 ]
-            then
-              testsToRun=matching
-            elif [ $CIRCLE_NODE_INDEX -eq 3 ]
-            then
-              testsToRun=WolframModel
-            else
-              testsToRun=$(circleci tests glob "Tests/*.wlt" \
-                | sed "/Tests\/performance.wlt/d" \
-                | sed "/Tests\/matching.wlt/d" \
-                | sed "/Tests\/WolframModel.wlt/d" \
-                | circleci tests split --total=2 --split-by=filesize \
-                | sed "s/\.wlt//" \
-                | sed "s/Tests\///")
-            fi
-            ./.circleci/test.sh $testsToRun
+          command: ./.circleci/test.sh
 
       - run:
           name: Performance Test
