@@ -112,16 +112,27 @@ jobs:
             powershell Install-Package -Force 7Zip4Powershell
             powershell Expand-7Zip msys2.tar.xz ./
             powershell Expand-7Zip msys2.tar ./
-
-      - run:
-          name: Install Dependencies
-          command: |
-            cmd.exe /C "msys64\usr\bin\bash.exe -l -c \"pacman --verbose -S --noconfirm mingw-w64-x86_64-cmake\""
-            cmd.exe /C "msys64\usr\bin\bash.exe -l -c \"pacman --verbose -S --noconfirm mingw-w64-x86_64-gmp\""
+            cmd_run() {
+              cmd.exe /C "$1"
+            }
+            msys2_run () {
+              cmd_run "msys64\usr\bin\bash.exe -l -c \"PATH=\\\"/mingw64/bin:$PATH\\\" $1\""
+            }
+            export -f cmd_run msys2_run >> $BASH_ENV
+            msys2_run "echo \"init\""
 
       - run:
           name: Build
-          command: cmd.exe /C "msys64\usr\bin\bash.exe -l -c \"scripts/buildLibraryResources.sh\""
+          command: |
+            source $BASH_ENV
+            msys2_run "pacman --verbose -S --noconfirm mingw-w64-x86_64-cmake"
+            msys2_run "pacman --verbose -S --noconfirm mingw-w64-x86_64-gmp"
+
+      - run:
+          name: Build
+          command: |
+            source $BASH_ENV
+            msys2_run "./scripts/buildLibraryResources.sh"
 
       - persist_to_workspace:
           root: LibraryResources
