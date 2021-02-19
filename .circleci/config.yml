@@ -117,13 +117,14 @@ jobs:
       - run:
           name: Get MPIR
           command: |
-            git clone git://github.com/BrianGladman/mpir.git mpir
+            mpirURL="http://mpir.org/mpir-3.0.0.zip"
+            curl -L --output mpir.zip $mpirURL
+            unzip -q mpir.zip
 
       - run:
           name: Compile MPIR
           command: |
-            cd mpir
-            autoconf
+            cd mpir-3.0.0
             ./configure
             make -j5
             make -j5 check
