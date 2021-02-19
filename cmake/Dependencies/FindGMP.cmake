@@ -1,5 +1,5 @@
-find_package(PkgConfig QUIET)
-pkg_check_modules(PKG QUIET gmp gmpxx)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(PKG gmp gmpxx)
 
 find_path(GMP_INCLUDE_DIR gmp.h HINTS ${PKG_gmp_INCLUDEDIR})
 find_library(GMP_LIB gmp HINTS ${PKG_gmp_LIBDIR})
