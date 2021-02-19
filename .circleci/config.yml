@@ -123,6 +123,7 @@ jobs:
           name: Compile MPIR
           command: |
             cd mpir
+            autoconf
             ./configure
             make -j5
             make -j5 check
