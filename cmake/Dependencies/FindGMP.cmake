@@ -2,10 +2,18 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(PKG gmp gmpxx)
 
 find_path(GMP_INCLUDE_DIR gmp.h HINTS ${PKG_gmp_INCLUDEDIR})
-find_library(GMP_LIB NAMES gmp libgmp.dll.a HINTS ${PKG_gmp_LIBDIR})
+find_library(GMP_LIB gmp HINTS ${PKG_gmp_LIBDIR})
+
+if(GMP_LIB EQUAL "GMP_LIB-NOTFOUND")
+  find_file(GMP_LIB libgmp.dll.a HINTS ${PKG_gmp_LIBDIR})
+endif()
 
 find_path(GMPXX_INCLUDE_DIR gmpxx.h HINTS ${PKG_gmpxx_INCLUDEDIR})
-find_library(GMPXX_LIB NAMES gmpxx libgmpxx.dll.a HINTS ${PKG_gmpxx_LIBDIR})
+find_library(GMPXX_LIB gmpxx HINTS ${PKG_gmpxx_LIBDIR})
+
+if(GMPXX_LIB EQUAL "GMPXX_LIB-NOTFOUND")
+  find_file(GMPXX_LIB libgmpxx.dll.a HINTS ${PKG_gmpxx_LIBDIR})
+endif()
 
 message(STATUS "GMP_INCLUDE_DIR: ${GMP_INCLUDE_DIR}")
 message(STATUS "GMP_LIB: ${GMP_LIB}")
