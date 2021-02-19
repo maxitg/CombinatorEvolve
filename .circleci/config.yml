@@ -115,21 +115,14 @@ jobs:
             echo "export PATH=\"$(pwd)/$cmakeDir/bin:$PATH\"" >> $BASH_ENV
 
       - run:
-          name: Install 7Zip
-          command: powershell Install-Package -Force 7Zip4Powershell
+          name: Get MPIR
+          command: |
+            git clone git://github.com/BrianGladman/mpir.git mpir
 
       - run:
-          name: Get libGMP
+          name: Compile MPIR
           command: |
-            gmpURL="https://gmplib.org/download/gmp/gmp-6.2.1.tar.xz"
-            curl -L --output gmp.tar.xz $gmpURL
-            powershell Expand-7Zip gmp.tar.xz ./
-            powershell Expand-7Zip gmp.tar ./
-
-      - run:
-          name: Compile libGMP
-          command: |
-            cd gmp-6.2.1
+            cd mpir
             ./configure
             make -j5
             make -j5 check
