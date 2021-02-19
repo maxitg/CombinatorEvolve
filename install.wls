@@ -10,7 +10,7 @@ Check[
 ];
 
 Check[
-  InstallGitLink[];
+  CombinatorEvolveDevUtils`InstallGitLink[];
 
   buildResult = CombinatorEvolveDevUtils`BuildLibCombinatorEvolve["Verbose" -> True];
   If[!AssociationQ[buildResult],
