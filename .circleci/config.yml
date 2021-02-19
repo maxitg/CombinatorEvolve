@@ -131,8 +131,7 @@ jobs:
 
       - run:
           name: Build
-          command: |
-            PATH=/mingw64/bin:$PATH ./scripts/buildLibraryResources.sh
+          command: PATH=$(pwd)/../msys64/mingw64/bin:$PATH ./scripts/buildLibraryResources.sh
 
       - persist_to_workspace:
           root: LibraryResources
