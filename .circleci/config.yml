@@ -117,23 +117,23 @@ jobs:
             }
             declare -f cmd_run >> $BASH_ENV
             msys2_run () {
-              cmd_run "msys64\usr\bin\bash.exe -l -c \"PATH=\\\"/mingw64/bin:$PATH\\\" $1\""
+              cmd_run "msys64\usr\bin\bash.exe -l -c \"$1\""
             }
             declare -f msys2_run >> $BASH_ENV
             msys2_run "echo \"init\""
 
       - run:
-          name: Build
+          name: Install Dependencies
           command: |
             source $BASH_ENV
-            msys2_run "pacman --verbose -S --noconfirm mingw-w64-x86_64-cmake"
-            msys2_run "pacman --verbose -S --noconfirm mingw-w64-x86_64-gmp"
+            msys2_run 'pacman --verbose -S --noconfirm mingw-w64-x86_64-cmake'
+            msys2_run 'pacman --verbose -S --noconfirm mingw-w64-x86_64-gmp'
 
       - run:
           name: Build
           command: |
             source $BASH_ENV
-            msys2_run "./scripts/buildLibraryResources.sh"
+            msys2_run 'PATH=/mingw64/bin:$PATH ./scripts/buildLibraryResources.sh'
 
       - persist_to_workspace:
           root: LibraryResources
