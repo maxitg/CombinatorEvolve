@@ -7,8 +7,8 @@ find_library(GMP_LIB NAMES gmp HINTS ${PKG_gmp_LIBDIR})
 find_path(GMPXX_INCLUDE_DIR gmpxx.h HINTS ${PKG_gmpxx_INCLUDEDIR})
 find_library(GMPXX_LIB NAMES gmpxx HINTS ${PKG_gmpxx_LIBDIR})
 
-GMP_LIB="C:/Users/circleci/msys64/mingw64/bin/libgmp-10.dll"
-GMPXX_LIB="C:/Users/circleci/msys64/mingw64/bin/libgmpxx-4.dll"
+set(GMP_LIB "C:/Users/circleci/msys64/mingw64/bin/libgmp-10.dll")
+set(GMPXX_LIB "C:/Users/circleci/msys64/mingw64/bin/libgmpxx-4.dll")
 
 message(STATUS "GMP_INCLUDE_DIR: ${GMP_INCLUDE_DIR}")
 message(STATUS "GMP_LIB: ${GMP_LIB}")
