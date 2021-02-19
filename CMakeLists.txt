@@ -72,6 +72,7 @@ set(libCombinatorEvolve_sources
 list(TRANSFORM libCombinatorEvolve_headers PREPEND "libCombinatorEvolve/")
 list(TRANSFORM libCombinatorEvolve_sources PREPEND "libCombinatorEvolve/")
 
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Dependencies ${CMAKE_MODULE_PATH})
 find_package(GMP REQUIRED)
 
