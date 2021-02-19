@@ -132,8 +132,7 @@ jobs:
       - run:
           name: Build
           command: |
-            source $BASH_ENV
-            msys2_run 'PATH=/mingw64/bin:$PATH ./scripts/buildLibraryResources.sh'
+            PATH=/mingw64/bin:$PATH ./scripts/buildLibraryResources.sh
 
       - persist_to_workspace:
           root: LibraryResources
