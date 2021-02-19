@@ -108,6 +108,7 @@ jobs:
       - run:
           name: Install msys2
           command: |
+            cd ..
             curl http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20210215.tar.xz -o msys2.tar.xz
             powershell Install-Package -Force 7Zip4Powershell
             powershell Expand-7Zip msys2.tar.xz ./
@@ -117,7 +118,7 @@ jobs:
             }
             declare -f cmd_run >> $BASH_ENV
             msys2_run () {
-              cmd_run "msys64\usr\bin\bash.exe -l -c \"$1\""
+              cmd_run "..\msys64\usr\bin\bash.exe -l -c \"$1\""
             }
             declare -f msys2_run >> $BASH_ENV
             msys2_run "echo \"init\""
