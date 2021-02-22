@@ -90,7 +90,6 @@ elif [ "$(uname -sm)" = "Linux x86_64" ]; then
   echo "  might not work on other systems."
 elif [[ "$OSTYPE" == "msys" && "$(uname -m)" == "x86_64" ]]; then # Windows
   echo "Operating system unsupported"
-  exit 1
 else
   echo "Operating system unsupported"
   exit 1
