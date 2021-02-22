@@ -108,7 +108,7 @@ elif [ "$(uname -sm)" = "Linux x86_64" ]; then
   echo "  might not work on other systems."
 elif [[ "$OSTYPE" == "msys" && "$(uname -m)" == "x86_64" ]]; then # Windows
   # On Windows, we copy the gmp itself to the paclet
-  cp "$(dirname $compiledLibrary)"/*gmp* "$libraryDir"
+  cp "/home/Administrator/msys-64/mingw64/bin/libgmp-10.dll" "$libraryDir"
 else
   echo "Operating system unsupported"
   exit 1

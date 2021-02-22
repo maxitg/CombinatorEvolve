@@ -80,9 +80,6 @@ target_include_directories(CombinatorEvolve PUBLIC
 target_compile_options(CombinatorEvolve PRIVATE ${COMBINATOR_EVOLVE_COMPILE_OPTIONS})
 target_link_libraries(CombinatorEvolve ${GMP_LIB})
 
-add_custom_command(TARGET CombinatorEvolve
-                   POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy "${GMP_LIB}" $<TARGET_FILE_DIR:CombinatorEvolve>)
-
 set(COMBINATOR_EVOLVE_LIBRARIES CombinatorEvolve)
 
 install(TARGETS ${COMBINATOR_EVOLVE_LIBRARIES}
