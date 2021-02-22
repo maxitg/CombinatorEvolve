@@ -79,6 +79,23 @@ fi
 
 echo "Found compiled library at $combinatorEvolveRoot/$compiledLibrary"
 
+# Add rpath for libgmp
+
+if [ "$(uname -sm)" = "Darwin x86_64" ]; then
+  install_name_tool -change "/usr/local/opt/gmp/lib/libgmp.10.dylib" \
+                             "@executable_path/../SystemFiles/Libraries/MacOSX-x86-64/libgmp.dylib" \
+                             "$compiledLibrary"
+elif [ "$(uname -sm)" = "Linux x86_64" ]; then
+  echo "Warning: ./buildLibraryResources.sh currently builds a library that will try to load an external libGMP, so it"
+  echo "  might not work on other systems."
+elif [[ "$OSTYPE" == "msys" && "$(uname -m)" == "x86_64" ]]; then # Windows
+  echo "Operating system unsupported"
+  exit 1
+else
+  echo "Operating system unsupported"
+  exit 1
+fi
+
 # Copy the library to LibraryResources
 
 mkdir -p $libraryDir
