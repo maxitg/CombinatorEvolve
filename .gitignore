@@ -1,3 +1,5 @@
+Notebooks/
+
 # Xcode
 
 xcuserdata/
@@ -6,9 +8,10 @@ xcuserdata/
 
 .DS_Store
 
-# Built paclets
+# Build artifacts
 
 *.paclet
+build/
 
 # Library binary
 
