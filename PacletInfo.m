@@ -5,7 +5,7 @@ Paclet[
   Description -> "CombinatorEvolve computes SK combinator leaf counts.",
   Creator -> "Wolfram Research",
   URL -> "https://github.com/maxitg/CombinatorEvolve",
-  SystemID -> {"MacOSX-x86-64", "Linux-x86-64", "Windows-x86-64"},
+  SystemID -> {"MacOSX-x86-64", "MacOSX-ARM64", "Linux-x86-64", "Windows-x86-64"},
   Extensions -> {
     {"Kernel", Context -> "CombinatorEvolve`"},
     {"LibraryLink"}
